@@ -1,24 +1,28 @@
 import os
 import time
 import json
+import asyncio
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from presidio_helper import PIIRedactor
 from injection_detector import InjectionDetector
 from dotenv import load_dotenv
 
+# Import google-antigravity SDK safety policies
+from google.antigravity import Agent, LocalAgentConfig
+from google.antigravity.hooks import policy
+
 load_dotenv()
 
 app = FastAPI(
-    title="AI Security Wrapper Gateway",
-    description="Protects LLM inference endpoints from prompt injections and data leaks",
+    title="ADK Agent Security Wrapper Gateway",
+    description="Protects Antigravity Agents using Microsoft Presidio and ADK Policy engines",
     version="1.0"
 )
 
 # ----------------- SECURITY COMPONENTS -----------------
 pii_redactor = PIIRedactor()
 injection_detector = InjectionDetector()
-
 AUDIT_LOG_FILE = "./security_audit.log"
 
 def write_audit_log(event_type: str, details: dict):
@@ -41,40 +45,43 @@ class SecureChatResponse(BaseModel):
     blocked: bool
     latency_ms: float
 
-# ----------------- LLM CONNECTOR -----------------
-def generate_llm_response(prompt: str) -> str:
+# ----------------- ADK SECURED INFERENCE -----------------
+async def run_secured_agent(prompt: str) -> str:
     """
-    Sends query to Gemini API, falling back to mock response if unavailable.
+    Executes the google-antigravity Agent query wrapped in safety policies.
     """
-    api_key = os.getenv("GEMINI_API_KEY")
-    if api_key:
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content(prompt)
-            return response.text.strip()
-        except Exception as e:
-            print(f"[LLM Warning] Gemini call failed: {e}. Using simulated response.")
-            
-    # Mock LLM responder
-    return f"Processed query safely: '{prompt}'. Here is the simulated secure response."
+    # 1. Define policies: Deny run_command completely, restrict workspace
+    allowed_workspaces = [os.path.abspath("./")]
+    
+    agent_policies = [
+        policy.deny("run_command"), # Prevent shell executions
+        policy.workspace_only(allowed_workspaces), # Restrict file tools to current folder
+        # Predicate check: Deny tool call if arguments contain high risk terms
+        policy.deny(
+            "*", 
+            when=lambda args: any("rm -rf" in str(v) for v in args.values()),
+            name="deny_rm_rf"
+        )
+    ]
+    
+    config = LocalAgentConfig(
+        system_instructions="You are a safe internal assistant. Obey all safety guidelines.",
+        policies=agent_policies
+    )
+    
+    async with Agent(config=config) as agent:
+        response = await agent.chat(prompt)
+        return await response.text()
 
 # ----------------- ENDPOINTS -----------------
 
 @app.middleware("http")
-async def rate_limit_and_ip_checks(request: Request, call_next):
-    """
-    Basic security logs and source validation middleware.
-    """
+async def log_latency_middleware(request: Request, call_next):
     client_ip = request.client.host if request.client else "unknown"
     start_time = time.time()
-    
-    # Process request
     response = await call_next(request)
-    
     latency = (time.time() - start_time) * 1000
-    print(f"[Gateway IP Logging] {request.method} {request.url.path} from IP: {client_ip} | Latency: {latency:.2f}ms")
+    print(f"[Secured Gateway IP] {request.method} {request.url.path} from IP: {client_ip} | Latency: {latency:.2f}ms")
     return response
 
 @app.post("/secure-chat", response_model=SecureChatResponse)
@@ -84,41 +91,32 @@ def secure_chat(request: SecureChatRequest):
     
     # 1. Inspect for Prompt Injection
     if injection_detector.is_injection(query):
-        write_audit_log(
-            "INJECTION_ATTEMPT", 
-            {"query": query[:250], "action": "blocked"}
-        )
+        write_audit_log("INJECTION_ATTEMPT", {"query": query[:250], "action": "blocked"})
         raise HTTPException(
             status_code=400, 
             detail="Request blocked: Potential prompt injection attempt detected."
         )
 
-    # 2. Redact PII (Input Sanitization)
+    # 2. Redact PII in prompt (Input Sanitization)
     redacted_query = pii_redactor.redact(query)
-    pii_redacted = redacted_query != query
     
-    if pii_redacted:
-        write_audit_log(
-            "PII_REDACTED", 
-            {"original": query[:120], "redacted": redacted_query[:120]}
-        )
-        print("[PII Intercepted] Sensitive details redacted from prompt.")
+    # 3. Call Secured Antigravity Agent
+    api_key_set = bool(os.getenv("GEMINI_API_KEY"))
+    try:
+        if api_key_set:
+            raw_response = asyncio.run(run_secured_agent(redacted_query))
+            mode = "ADK-SECURE-GEMINI"
+        else:
+            raw_response = f"[Simulated Response] Safe answer to query: '{redacted_query}'."
+            mode = "ADK-SECURE-OFFLINE"
+    except Exception as e:
+        write_audit_log("POLICY_VIOLATION_BLOCKED", {"error": str(e)})
+        raise HTTPException(status_code=403, detail=f"Request blocked by ADK Safety Policies: {e}")
 
-    # 3. Call LLM
-    raw_response = generate_llm_response(redacted_query)
-
-    # 4. Inspect Output (Output Validation)
-    # Ensure no credit cards or PII are leaked in response text
+    # 4. Inspect Output PII leak
     safe_response = pii_redactor.redact(raw_response)
     output_sanitized = safe_response != raw_response
     
-    if output_sanitized:
-         write_audit_log(
-            "OUTPUT_PII_LEAK_BLOCKED", 
-            {"raw": raw_response[:120], "redacted": safe_response[:120]}
-         )
-         print("[PII Intercepted] Blocked sensitive leak from outbound response.")
-
     latency_ms = (time.time() - start_time) * 1000
 
     return SecureChatResponse(

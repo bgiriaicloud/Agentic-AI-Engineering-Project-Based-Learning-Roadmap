@@ -2,16 +2,16 @@
 *Duration: 4 Weeks | Focus: MLOps & Deployment*
 
 ## 📖 Project Brief
-Students will containerize a model inference API (built with FastAPI and a lightweight HuggingFace sentiment pipeline) using Docker, write Kubernetes deployment configuration files, configure automated monitoring endpoints with Prometheus and Grafana, and design a deployment architecture suitable for hosting AI microservices.
+Students will containerize a model inference API (built with FastAPI serving a **Google Antigravity SDK (ADK)** Agent) using Docker, write Kubernetes deployment configuration files, configure automated monitoring endpoints with Prometheus and Grafana, and design a deployment architecture suitable for hosting AI microservices.
 
 ---
 
 ## 🎯 Learning Objectives
 - Containerize Python applications with multi-stage `Dockerfiles` optimizing for size and caching.
-- Understand CPU/GPU resource allocation constraints in container execution.
+- Serve a stateful/async Agent via FastAPI.
 - Create Kubernetes Pod, Deployment, and Service manifests with health checks (readiness/liveness probes).
-- Integrate custom metrics instrumentation (FastAPI + Prometheus custom metrics).
-- Monitor API request latency, queue lengths, and container resource limits.
+- Integrate custom telemetry metrics (FastAPI + Prometheus custom metrics).
+- Monitor Agent request latency and error rates.
 - Understand canary and rolling update deployment strategies.
 
 ---
@@ -23,7 +23,7 @@ Students will containerize a model inference API (built with FastAPI and a light
 |                      LLMOPS WORKFLOW ARCHITECTURE                      |
 +------------------------------------------------------------------------+
 |                                                                        |
-|      [Local Python Code]               [HuggingFace Model Weights]     |
+|      [Local Python Code]               [GCP Gemini Model API]          |
 |              │                                      │                  |
 |              ▼ (Build Docker Container Layers)      │                  |
 |      [Docker Image (ai-inference-app)] <────────────+                  |
@@ -56,46 +56,20 @@ Students will containerize a model inference API (built with FastAPI and a light
 
 ## 🚦 Step-by-Step Implementation Guide
 
-Follow these steps to containerize, deploy, and monitor the Inference API:
+Follow these steps to containerize, deploy, and monitor the Agent API:
 
 1. **Service Inception:** Develop the FastAPI application in `src/main.py` with standard model input validation models using Pydantic.
-2. **HuggingFace Pipeline Setup:** Incorporate a sentiment analysis pipeline loader inside `src/main.py`. Build a mock fallback classifier to handle CPU-only offline dry-runs.
-3. **Instrument Metrics:** Add Prometheus metric tracking variables (Counter for requests, Histogram for inference durations) and construct the `/metrics` scraper endpoint in `src/main.py`.
-4. **Health Check Probes:** Expose standard `/` health checking targets and a `/ready` path that checks if the model weights are loaded and ready.
+2. **Setup Async ADK Agent:** Incorporate an async chat execute method in `src/main.py` that handles `Agent` initialization using `LocalAgentConfig`.
+3. **Instrument Telemetry Metrics:** Add Prometheus metric tracking variables (Counter for agent requests, Histogram for model durations) and construct the `/metrics` scraper endpoint in `src/main.py`.
+4. **Health Check Probes:** Expose standard `/` health checking targets and a `/ready` path that checks if the service is ready.
 5. **Optimize Docker Layers:** Write the multi-stage `Dockerfile` to cache pip dependencies and isolate system build utilities from the runtime image.
 6. **Local Container Verification:** Build the Docker image locally and execute it with port forwarding to test API queries manually.
 7. **Local Cluster Activation:** Install and launch Minikube (`minikube start`) and map your terminal shell to Minikube's internal Docker registry.
 8. **Draft K8s Deployment Manifest:** Write `deployment.yaml` defining 2 replicas, resource allocations (250m CPU requests, 1Gi Memory limits), and readiness/liveness timeout specifications.
 9. **Draft K8s Service Manifest:** Write `service.yaml` specifying a NodePort service mapping port 8000 to port 30080 on the host VM.
 10. **Deploy and Expose:** Apply your manifests using `kubectl apply` commands and retrieve the NodePort access address from Minikube.
-11. **Configure Monitoring Scrapers:** Create `prometheus.yml` containing target scrapers that pull telemetry metrics from your running FastAPI pod endpoints.
-12. **Test Scaling Resilience:** Simulate replica failures by deleting a pod and watch Kubernetes self-healing features spin up replacement instances.
-
----
-
-## 📅 Week-by-Week Deliverables
-
-### Week 1: Docker Containerization
-- Build a FastAPI service that runs a lightweight text sentiment classification pipeline (HuggingFace Transformers).
-- Implement a Dockerfile optimizing layers for model caching.
-- **Deliverable:** `Dockerfile` and local container running at port `8000`.
-
-### Week 2: Kubernetes Configuration
-- Install Minikube/Kubectl locally.
-- Write Kubernetes `deployment.yaml` and `service.yaml` manifests.
-- Specify request and limit thresholds for CPU and Memory.
-- **Deliverable:** Successful deployment of the API pod on Minikube.
-
-### Week 3: Metrics Instrumentation
-- Implement custom `/metrics` endpoint using `prometheus_client`.
-- Export custom metrics: inference request count, prediction inference latency (histogram), and active request count.
-- Configure `prometheus.yml` scrapers to poll target pods.
-- **Deliverable:** `prometheus.yml` configuration and active scraper metrics logs.
-
-### Week 4: Deployment Validation & Strategies
-- Test rolling update changes using Kubernetes rollout commands.
-- Simulate container failures (e.g. out-of-memory or liveness timeout) and verify automatic pod restarts.
-- **Deliverable:** Completed documentation on debugging container lifecycles.
+11. **Configure Monitoring Scrapers:** Create `prometheus.yml` containing scraper settings targeting your FastAPI metrics endpoint.
+12. **Verify Telemetry Output:** Hit the `http://localhost:8000/metrics` target and verify custom counters and histograms are logged correctly.
 
 ---
 
@@ -157,14 +131,8 @@ minikube service ai-inference-app-service
 
 | Criteria | Weight | Description |
 | :--- | :--- | :--- |
-| **Dockerfile Optimization** | 20% | Correct use of multi-stage structures, base images, and layers optimizing model weight caching. |
+| **Dockerfile Optimization** | 20% | Correct use of multi-stage structures, base images, and layers optimizing dependencies. |
 | **Kubernetes Declarations** | 30% | Correct resources allocations (limits vs requests), health checks, and service configurations. |
-| **Prometheus Instrumentation** | 30% | Accurate setup of histograms and counters tracking API throughput and performance. |
+| **Prometheus Telemetry** | 30% | Accurate setup of histograms and counters tracking Agent chat latency and request rates. |
 | **Rollouts & Failure Resilience** | 10% | Correct application of deployment rolling updates and handling pod errors. |
 | **Code Structure & Readme** | 10% | Clean formatting and description of steps. |
-
----
-
-## 🛠️ Troubleshooting & Tips
-- **ImagePullBackOff:** If Minikube cannot pull your image, ensure you run `eval $(minikube docker-env)` before building the image, or set `imagePullPolicy: Replace/Never` inside `deployment.yaml`.
-- **Memory Limits:** Sentiment analysis pipeline on HuggingFace can draw more memory than typical microservices. If your container gets killed immediately, increase K8s resource requests limit in `deployment.yaml`.

@@ -2,16 +2,16 @@
 *Duration: 4 Weeks | Focus: Safety & Compliance*
 
 ## 📖 Project Brief
-Students will build a security middleware wrapping LLM endpoints to detect prompt injection attacks, automatically redact Personally Identifiable Information (PII/PHI) using Microsoft Presidio, and enforce safety guardrails on output content to prevent toxic output and leaks.
+Students will build a security middleware wrapping LLM endpoints to detect prompt injection attacks, redact Personally Identifiable Information (PII/PHI) using Microsoft Presidio, and enforce safety guardrails using the **Google Antigravity SDK (ADK) Policy Engine** (blocking shell commands, workspace boundaries, and predicate argument checks).
 
 ---
 
 ## 🎯 Learning Objectives
 - Understand common LLM vulnerabilities (Prompt Injection, Jailbreaking, System Prompt Extraction).
-- Integrate **Microsoft Presidio** to analyze and redact telephone numbers, credit cards, emails, names, and IP addresses.
-- Write robust, heuristic-based and vector-based **Prompt Injection Detectors**.
-- Understand rate limiting and IP access lists for AI APIs.
-- Evaluate the latency-security tradeoff when chain-processing multiple security wrapper filters.
+- Integrate **Microsoft Presidio** to analyze and redact telephone numbers, credit cards, emails, and names from prompt inputs.
+- Configure **Google Antigravity Safety Policies** (`google.antigravity.hooks.policy`) to govern agent tool execution boundaries.
+- Set up workspace boundaries using `policy.workspace_only` and enforce argument checks using predicates.
+- Log telemetry metrics and compile safety audit logs to track security triggers.
 
 ---
 
@@ -31,10 +31,16 @@ Students will build a security middleware wrapping LLM endpoints to detect promp
 |  [Injection Detector] ──► (Triggered?) ──► [400 Blocked Response]      |
 |         │ (Safe)                                                       |
 |         ▼ (Apply Microsoft Presidio Redactor)                          |
-|  [PII Input Redactor] (John Doe -> <PERSON>, 555-1234 -> <PHONE>)       |
+|  [PII Input Redactor] (John Doe -> <PERSON>)                           |
 |         │                                                              |
-|         ▼ (Send sanitized prompt to backend LLM)                       |
-|  [Gemini API / LLM Engine]                                             |
+|         ▼ (Trigger google-antigravity runtime safety policies)         |
+|  [Antigravity Agent Config]                                            |
+|    - policy.deny("run_command")                                        |
+|    - policy.workspace_only(["./"])                                     |
+|    - policy.deny("*", when=lambda args: "rm -rf" in args)              |
+|         │                                                              |
+|         ▼ (Safety Checked execution via Gemini)                        |
+|  [Gemini Model Engine]                                                 |
 |         │                                                              |
 |         ▼ (Examine response text for accidental leaks)                 |
 |  [PII Output Redactor]                                                 |
@@ -62,10 +68,10 @@ Follow these steps to build and execute the AI Security Wrapper:
 6. **Implement Injection Keywords:** Define high-risk prompt injection keywords (e.g. "ignore all instructions") in `src/injection_detector.py`.
 7. **Implement Semantic Injection Checks:** Code similarity comparisons using SentenceTransformers inside `src/injection_detector.py` to compare inputs against known jailbreaks.
 8. **Build API Middleware:** Set up the FastAPI framework in `src/guard_wrapper.py` with custom middleware capturing client IP addresses.
-9. **Implement Pipeline Logic:** In the `/secure-chat` endpoint, coordinate prompt verification: check injection, redact PII, call LLM, and sanitize outbound response.
-10. **Implement Audit Log:** Code the `write_audit_log` function in `src/guard_wrapper.py` to write JSON audit trails to `security_audit.log`.
-11. **Run & Test Security:** Launch the server (`python src/guard_wrapper.py`) and test normal vs jailbreak inputs to verify blocks.
-12. **Review Latency Logs:** Check the printed output log statements to analyze the execution latency of your security filters.
+9. **Configure ADK Safety Policies:** In `src/guard_wrapper.py`, establish safety configs utilizing `google.antigravity.hooks.policy`. Deny shell executions (`policy.deny("run_command")`) and set folder parameters.
+10. **Implement Custom Safety Predicates:** Write argument checker lambda conditions to deny any tool argument containing high-risk strings (like `rm -rf`).
+11. **Assemble Wrapper Logic:** Hook inputs to PII redact, trigger the safe Agent chat run, perform output checks, and write results to `security_audit.log`.
+12. **Run & Test Security:** Launch the server (`python src/guard_wrapper.py`) and test normal vs jailbreak inputs to verify policy blocks.
 
 ---
 
@@ -78,57 +84,16 @@ Follow these steps to build and execute the AI Security Wrapper:
 
 ### Week 2: Input Sanitization (PII Redaction)
 - Integrate Microsoft Presidio Analyzer and Anonymizer engines.
-- Write custom PII rule matches (e.g. for custom internal employee ID formats).
 - **Deliverable:** `src/presidio_helper.py` showing working redaction.
 
 ### Week 3: Prompt Injection Protection
 - Implement detection rules (regex check, heuristic patterns, and similarity matching against known jailbreak vectors).
 - **Deliverable:** `src/injection_detector.py` showing blocking of malicious inputs.
 
-### Week 4: Output Guardrails & Audits
-- Hook input and output checks into a combined FastAPI routing pipeline.
-- Implement security audit log generation for tracking security triggers.
+### Week 4: ADK Safety Policies & Middleware
+- Hook safety policies (`policy.deny`, `policy.workspace_only`, arguments predicates) into the active Agent config.
+- Run FastAPI endpoint integrations and audit security logs.
 - **Deliverable:** Completed `src/guard_wrapper.py` middleware running locally.
-
----
-
-## 📁 Repository Structure
-```
-P6-ai-security-guardrails/
-├── README.md
-├── requirements.txt
-├── .env.example
-└── src/
-    ├── presidio_helper.py
-    ├── injection_detector.py
-    └── guard_wrapper.py
-```
-
----
-
-## 🚀 Setup & Execution
-
-### 1. Install Dependencies
-Ensure your virtual environment is active:
-```bash
-pip install -r requirements.txt
-```
-*Note: Microsoft Presidio requires downloading a spaCy language model. Run:*
-```bash
-python -m spacy download en_core_web_sm
-```
-
-### 2. Configure Environment
-```bash
-cp .env.example .env
-```
-Ensure your `GEMINI_API_KEY` is present.
-
-### 3. Start the Secured API Wrapper
-```bash
-python src/guard_wrapper.py
-```
-Test endpoints using Swagger docs at `http://localhost:8000/docs`.
 
 ---
 
@@ -136,14 +101,8 @@ Test endpoints using Swagger docs at `http://localhost:8000/docs`.
 
 | Criteria | Weight | Description |
 | :--- | :--- | :--- |
-| **PII Redaction Engine** | 30% | Correct integration of Presidio; successfully redacts emails, credit cards, and names from inputs. |
-| **Prompt Injection Protection** | 30% | Accurately identifies jailbreak attempts (e.g., "ignore prior instructions") and aborts execution. |
-| **API Middleware Wrapper** | 20% | Correct coordination of security pipeline phases in FastAPI; provides clear audit logs. |
-| **Code Performance** | 10% | Latency is kept minimal during scanning phases. |
+| **PII Redaction Engine** | 20% | Correct integration of Presidio; successfully redacts emails, credit cards, and names from inputs. |
+| **Prompt Injection Protection** | 25% | Accurately identifies jailbreak attempts (e.g., "ignore prior instructions") and aborts execution. |
+| **ADK Safety Policies Config** | 35% | Correct registration of security policies (blocking commands, workspace boundaries, and predicates checks). |
+| **API Middleware Wrapper** | 10% | Correct coordination of security pipeline phases in FastAPI; provides clear audit logs. |
 | **Documentation & Readme** | 10% | Setup instructions and testing procedures are detailed. |
-
----
-
-## 🛠️ Troubleshooting & Tips
-- **Presidio Language Model Error:** If Presidio complains about missing spaCy models, confirm you ran `python -m spacy download en_core_web_sm` and restarted your server.
-- **False Positives:** If your injection detector is too sensitive, it might block legitimate requests. Fine-tune your similarity thresholds or validation rules in `src/injection_detector.py`.

@@ -2,16 +2,16 @@
 *Duration: 4 Weeks | Focus: Agentic AI & Orchestration*
 
 ## 📖 Project Brief
-Students will build a **Cloud Migration Advisor** using a multi-agent orchestration framework (LangGraph and CrewAI). The system coordinates three specialized agents (Infrastructure Agent, Cost Optimization Agent, and Security Compliance Agent) to review cloud migration requests and produce an integrated cloud deployment plan.
+Students will build a **Cloud Migration Advisor** using a multi-agent orchestration framework powered by the **Google Antigravity SDK (ADK)**. The system instantiates a Lead Coordinator Agent and delegates tasks to three specialized subagents (Infrastructure Specialist, Cost optimization Agent, and Security compliance Agent) using shared context prompts and tool execution.
 
 ---
 
 ## 🎯 Learning Objectives
-- Learn role-based agent design and system prompting techniques.
-- Understand the difference between sequential crew workflows and cyclic state-machine graph architectures.
-- Implement state variables and message-based memory storage in LangGraph.
-- Master agent routing, conditional branching, and collaborative agent tasks.
-- Control state transitions dynamically based on structured output models.
+- Learn role-based agent design and system instructions in the Antigravity SDK.
+- Understand subagent delegation capabilities (`CapabilitiesConfig(enable_subagents=True)`).
+- Implement state-sharing paradigms inside agent prompts.
+- Understand how to stream agent thoughts (reasoning logs) and final responses in terminal interfaces.
+- Design cooperative multi-agent task descriptions.
 
 ---
 
@@ -19,42 +19,34 @@ Students will build a **Cloud Migration Advisor** using a multi-agent orchestrat
 
 ```
 +------------------------------------------------------------------------+
-|                 LANGGRAPH MULTI-AGENT STATE GRAPH                      |
+|                      ADK MULTI-AGENT ARCHITECTURE                      |
 +------------------------------------------------------------------------+
 |                                                                        |
 |                           [User Query Input]                           |
 |                                   │                                    |
 |                                   ▼                                    |
-|                       +────────────────────────+                       |
-|                       │  Infrastructure Node   │◄────────────────+     |
-|                       │ (InfrastructureAgent)  │                 │     |
-|                       +───────────┬────────────+                 │     |
-|                                   │                              │     |
-|                                   ▼                              │     |
-|                       +────────────────────────+                 │     |
-|                       │       Cost Node        │                 │ (If |
-|                       │      (CostAgent)       │                 │ Sec |
-|                       +───────────┬────────────+                 │ Warning|
-|                                   │                              │ &   |
-|                                   ▼                              │ Rev |
-|                       +────────────────────────+                 │ < 2)│
-|                       │     Security Node      │                 │     |
-|                       │     (SecurityAgent)    │                 │     |
-|                       +───────────┬────────────+                 │     |
-|                                   │                              │     |
-|                                   ▼                              │     |
-|                        /// Router Decision \\\ ──────────────────+     |
-|                        \\\                     ///                     |
+|                    +─────────────────────────────+                     |
+|                    │  Lead Coordinator Agent     │                     |
+|                    │  (Architect Coordinator)     │                     |
+|                    +──────────────┬──────────────+                     |
 |                                   │                                    |
-|                                   │ (Else: Safe or Max Revisions)      |
+|             ┌─────────────────────┼─────────────────────┐              |
+|             ▼ (Spawns)            ▼ (Spawns)            ▼ (Spawns)     |
+|      +──────────────+      +──────────────+      +──────────────+      |
+|      │Infrastructure│      │Cost Optimizer│      │ Security     │      |
+|      │  Subagent    │      │  Subagent    │      │  Subagent    │      |
+|      +──────┬───────+      +──────┬───────+      +──────┬───────+      |
+|             │                     │                     │              |
+|             └─────────────────────┼─────────────────────┘              |
+|                                   │ (Aggregates Specialist Feedback)   |
 |                                   ▼                                    |
-|                       +────────────────────────+                       |
-|                       │    Synthesize Node     │                       |
-|                       │  (Generates Report)    │                       |
-|                       +───────────┬────────────+                       |
+|                    +─────────────────────────────+                     |
+|                    │  Lead Coordinator Agent     │                     |
+|                    │  (Synthesizes Final Report) │                     |
+|                    +──────────────┬──────────────+                     |
 |                                   │                                    |
 |                                   ▼                                    |
-|                                [ END ]                                 |
+|                       [Advisor Output Report]                          |
 |                                                                        |
 +------------------------------------------------------------------------+
 ```
@@ -63,81 +55,40 @@ Students will build a **Cloud Migration Advisor** using a multi-agent orchestrat
 
 ## 🚦 Step-by-Step Implementation Guide
 
-Follow these steps to build and run the Multi-Agent AI System:
+Follow these steps to build and run the Multi-Agent System:
 
 1. **Environment Setup:** Create a virtual environment and install frameworks from `requirements.txt`.
 2. **Setup API Credentials:** Configure your Gemini API keys in the `.env` file.
-3. **Define Shared Graph State:** In `src/state.py`, define the `MigrationState` structure using a Python `TypedDict` containing all target tracking metrics.
-4. **Implement Custom Base Agent:** In `src/agents.py`, implement the base class wrapper `BaseAgent` that handles model prompt formatting and outputs.
-5. **Construct Agent Personas:** In `src/agents.py`, instantiate subclasses for `InfrastructureAgent`, `CostAgent`, and `SecurityAgent` with individual backstory goals.
-6. **Implement Offline Mock responses:** Add mock fallback logic inside each subclass so the state machine can execute without active internet connections.
-7. **Create Graph Nodes:** In `src/graph.py`, define node functions `run_infrastructure`, `run_cost`, and `run_security` that extract the graph state, call their respective agents, and return updated state dicts.
-8. **Build Conditional Edge Routing:** Create `security_routing_decision` in `src/graph.py` to check for security warnings and route the workflow back to infrastructure if revision count is less than 2.
-9. **Assemble the Workflow Graph:** Initialize the `StateGraph(MigrationState)` structure in `src/graph.py`, attach all nodes, link standard edges, map conditional routes, and compile the application.
-10. **Build CLI Entrypoint:** Create `src/main.py` containing terminal output banners, interactive prompt loops, and state compiler triggers.
-11. **Test Execution Loops:** Run `python src/main.py` and test standard inputs to verify cyclic paths are executing correctly.
-12. **Extend Agent Logic:** Challenge students to add a human-review validation node using LangGraph's native interrupt features.
+3. **Define Specialist Personas:** Document the backstories, objectives, and parameters for the 3 specialized subagents (Infrastructure, Cost, Security).
+4. **Draft Coordinator Instructions:** In `src/agents.py`, construct system instructions for the coordinator explaining the subagent specialist roles and delegation workflow.
+5. **Enable Subagent Capabilities:** Initialize a `CapabilitiesConfig(enable_subagents=True)` parameters object in `src/agents.py`.
+6. **Compose Agent Config:** Create `get_coordinator_config` in `src/agents.py` returns `LocalAgentConfig` populated with instructions and capability switches.
+7. **Setup main loop:** In `src/main.py`, setup an async wrapper to run the agent chat query.
+8. **Instantiate Main Agent:** Initialize the coordinator using `async with Agent(config) as agent:` in `src/main.py`.
+9. **Orchestrate Task Query:** Call `agent.chat(prompt)` requesting the coordinator to delegate tasks sequentially to the 3 subagents.
+10. **Stream Thought Output:** Capture response logs using `async for thought in response.thoughts` to display reasoning traces.
+11. **Print Aggregated Report:** Call `await response.text()` to display the final report.
+12. **Configure Verification Fallback:** Implement simulated prints displaying local fallback execution steps in `src/main.py` if the LLM environment is missing.
 
 ---
 
 ## 📅 Week-by-Week Deliverables
 
-### Week 1: Graph State and Schema Definition
-- Install frameworks, design the agent topology.
-- Code the shared graph state using Python TypedDict.
-- **Deliverable:** `src/state.py` containing structure and schema definitions.
+### Week 1: Configuration Design & Setup
+- Install dependencies, outline subagent parameters.
+- **Deliverable:** `src/agents.py` with coordinator layout and custom instructions.
 
-### Week 2: Specialist Agent Definitions
-- Define agent roles, backstories, and goals using CrewAI or LangChain.
-- Bind local mock tools (e.g. calculator, pricing search, compliance lookup) to agents.
-- **Deliverable:** `src/agents.py` with fully populated system instructions and tool bindings.
+### Week 2: Persona Definitions
+- Finalize specialist agent backstories and task delegation rules.
+- **Deliverable:** Config logs mapping agent constraints.
 
-### Week 3: LangGraph Compilation & Routing
-- Define nodes for each specialized agent and write graph transition loops.
-- Code the conditional router node to verify if agent suggestions require security revisions or cost refinements.
-- **Deliverable:** `src/graph.py` state-machine configuration.
+### Week 3: Multi-Agent Integration
+- Construct the async run agent loop inside the CLI wrapper.
+- **Deliverable:** Main agent compiling subagent query loops.
 
-### Week 4: Orchestration & Dashboard execution
-- Connect the LangGraph compiler to a console/dashboard interface.
-- Implement agent memory to recall state across multiple user messages.
-- Run test scenarios and evaluate handoff response times.
-- **Deliverable:** Executable `src/main.py` entrypoint.
-
----
-
-## 📁 Repository Structure
-```
-P2-multi-agent-system/
-├── README.md
-├── requirements.txt
-├── .env.example
-└── src/
-    ├── state.py
-    ├── agents.py
-    ├── graph.py
-    └── main.py
-```
-
----
-
-## 🚀 Setup & Execution
-
-### 1. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Configure Environment Variables
-Copy `.env.example` to `.env` and fill in your Gemini API keys:
-```bash
-cp .env.example .env
-```
-
-### 3. Run the Multi-Agent Advisor
-Launch the interactive CLI script:
-```bash
-python src/main.py
-```
+### Week 4: Execution & Testing
+- Run test cloud migration query scripts and check response times and token outputs.
+- **Deliverable:** Executable `src/main.py` client output report.
 
 ---
 
@@ -145,14 +96,14 @@ python src/main.py
 
 | Criteria | Weight | Description |
 | :--- | :--- | :--- |
-| **Graph State Design** | 20% | Proper state schema handling; prevents data loss during agent handoffs. |
-| **Agent Roles & Execution** | 30% | Correct system prompting, persona adherence, and modular tool actions. |
-| **Routing & Collaboration** | 30% | Correct execution of cyclic graph routing, state checks, and loop prevention. |
-| **User Interface & Integration** | 10% | Clean main script execution that outputs a readable final migration report. |
-| **Extension Activities** | 10% | Implement human-in-the-loop validation checkpoints in the graph workflow. |
+| **System Instruction Clarity** | 20% | Quality and clarity of coordinator instructions steering delegation patterns. |
+| **Capabilities Configuration** | 20% | Correct implementation of subagent enabling configs. |
+| **Multi-Agent Execution** | 30% | Correct execution of subagent responses and reports output compilation. |
+| **CLI & Output Presentation** | 15% | Clean terminal banner outputs showing clear agent thoughts logging. |
+| **Code Structure & Readme** | 15% | Clean Python coding styles and detailed guide. |
 
 ---
 
 ## 🛠️ Troubleshooting & Tips
-- **Infinite Loops:** If agents route back and forth continuously, check your conditional router logic to ensure loop exit conditions (e.g., maximum loops counter) are strictly enforced.
-- **Memory Storage:** To test persistence, run consecutive queries in the CLI interface and verify the agent remembers context from the prior turns.
+- **Thought-Streaming Failures:** Ensure you are accessing the `.thoughts` generator correctly inside the async loop. Not all model identifiers support reasoning traces.
+- **VRAM limit:** Using subagents can result in nested model execution. If using local offline fallbacks, CPU metrics should remain clean.

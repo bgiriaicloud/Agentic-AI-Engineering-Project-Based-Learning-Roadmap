@@ -2,17 +2,17 @@
 *Duration: 4 Weeks | Focus: Model Optimization*
 
 ## 📖 Project Brief
-Students will build a parameter-efficient fine-tuning (PEFT/LoRA) pipeline to adapt a small open-source LLM (such as `TinyLlama/TinyLlama-1.1B-Chat-v1.0` or `google/gemma-2b-it`) to a specialized domain (e.g. customer service or domain-specific legal definitions) using HuggingFace Transformers, PEFT, and PyTorch.
+Students will build a parameter-efficient fine-tuning (PEFT/LoRA) pipeline to adapt a small open-source LLM (such as `TinyLlama/TinyLlama-1.1B-Chat-v1.0` or `google/gemma-2b-it`) to generate structured JSON formats that strictly conform to **Google Antigravity SDK (ADK) Response Schemas** and Pydantic validation rules.
 
 ---
 
 ## 🎯 Learning Objectives
 - Master **LoRA (Low-Rank Adaptation)** and **QLoRA (Quantized LoRA)** concepts.
-- Format raw text datasets into instruction-response JSON pairs.
+- Format raw text datasets into instruction-response JSON pairs mapping to Pydantic structures.
 - Understand tokenization padding, truncation, and packing strategies.
 - Implement training configurations using HuggingFace `SFTTrainer` and `BitsAndBytesConfig` (for 4-bit/8-bit quantization).
 - Mitigate Out-of-Memory (OOM) errors using Gradient Accumulation, Gradient Checkpointing, and mixed precision (FP16/BF16).
-- Evaluate fine-tuned weights using perplexity and human evaluation.
+- Evaluate fine-tuned models on structured response accuracy to ensure zero schema compliance failures.
 
 ---
 
@@ -25,7 +25,7 @@ Students will build a parameter-efficient fine-tuning (PEFT/LoRA) pipeline to ad
 |                                                                        |
 |  [Raw Data Instructions] (sample_instructions.json)                    |
 |             │                                                          |
-|             ▼ (Apply prompt format structure)                          |
+|             ▼ (Apply Pydantic prompt format structures)                |
 |  [Processed Prompt Text]                                               |
 |             │                                                          |
 |             ▼ (Load Tokenizer mapping)                                 |
@@ -46,7 +46,7 @@ Students will build a parameter-efficient fine-tuning (PEFT/LoRA) pipeline to ad
 |                 [Saved Adapter Weights] (lora_adapters/)               |
 |                         │                                              |
 |                         ▼ (Merge weights during model load)            |
-|               [Evaluation & Inference Comparison]                      |
+|     [Output schema check passes google-antigravity structured checks]   |
 |                                                                        |
 +------------------------------------------------------------------------+
 ```
@@ -67,7 +67,7 @@ Follow these steps to build and execute the Fine-Tuning Pipeline:
 8. **Configure Training Arguments:** Define hyperparameters inside `src/train.py` including gradient accumulation and learning rate values.
 9. **Implement CPU Mock Training:** Build `run_dry_run_training` inside `src/train.py` to simulate epochs and save sample configurations without CUDA dependency.
 10. **Build Comparative Inference Scorer:** Inside `src/inference.py`, set up PeftModel wrappers to load base model weights and load the saved adapters.
-11. **Implement Inference Mock Comparison:** Code simulated before-and-after prints inside `src/inference.py` to display comparative changes.
+11. **Verify structured syntax formatting:** Code simulated before-and-after prints inside `src/inference.py` to show how untuned models output loose text while the tuned model outputs strict JSON matching the schema.
 12. **Run Training & Verification:** Execute the trainer (`python src/train.py`) and inference comparison script (`python src/inference.py`) to test adapter weight overlays.
 
 ---
@@ -97,47 +97,6 @@ Follow these steps to build and execute the Fine-Tuning Pipeline:
 
 ---
 
-## 📁 Repository Structure
-```
-P5-fine-tuning-pipeline/
-├── README.md
-├── requirements.txt
-├── data/
-│   └── sample_instructions.json
-└── src/
-    ├── prepare_dataset.py
-    ├── train.py
-    └── inference.py
-```
-
----
-
-## 🚀 Setup & Execution
-
-### 1. Install Dependencies
-Ensure you use a virtual environment:
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Format Raw Data
-```bash
-python src/prepare_dataset.py
-```
-
-### 3. Run Training (Dry-run or actual GPU training)
-```bash
-python src/train.py
-```
-
-### 4. Evaluate and Run Inference
-Compare base vs fine-tuned responses:
-```bash
-python src/inference.py
-```
-
----
-
 ## 📊 Grading Rubric (100 Points)
 
 | Criteria | Weight | Description |
@@ -145,11 +104,5 @@ python src/inference.py
 | **Dataset Engineering** | 20% | Instruction formatting, token verification, and train/test splits. |
 | **Quantization & LoRA Config** | 25% | Correct target modules and rank parameters (r, alpha, dropout) setup. |
 | **Trainer Setup & Runs** | 30% | Correct hyperparameters (learning rate, weight decay, epoch counts). |
-| **Inference Comparison** | 15% | Structured output comparison between base and adapter weights. |
+| **Inference Comparison** | 15% | Structured output comparison showing schema-compliant results. |
 | **Code Integrity & Documentation** | 10% | Clean, well-structured, and documented files. |
-
----
-
-## 🛠️ Troubleshooting & Tips
-- **CUDA Out of Memory:** If training fails due to VRAM limits, set `per_device_train_batch_size=1` and set `gradient_accumulation_steps=4` inside `src/train.py`. Enabling `gradient_checkpointing=True` also helps.
-- **CPU training:** If a GPU is not present, the scripts contain fallback checks to run dry-run steps on a CPU.
