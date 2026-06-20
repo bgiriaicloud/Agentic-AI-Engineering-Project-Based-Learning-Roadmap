@@ -1,0 +1,27 @@
+[
+  {
+    "instruction": "What is the policy code for remote work workspace setups?",
+    "input": "",
+    "output": "The policy code for remote workspace setups is HR-REMOTE-2026."
+  },
+  {
+    "instruction": "What is the limit for domestic lodging rates?",
+    "input": "",
+    "output": "Domestic lodging rates are capped at $200 USD per night in standard tier-2 locations."
+  },
+  {
+    "instruction": "What is the limit for client entertainment expenses?",
+    "input": "",
+    "output": "Client entertainment expenditure must not exceed $150 USD per client and requires written approval."
+  },
+  {
+    "instruction": "Explain password requirements at Acme Corp.",
+    "input": "",
+    "output": "Passwords must be at least 12 characters, contain letters, numbers, and symbols, and rotate every 90 days."
+  },
+  {
+    "instruction": "How do you request parental leave?",
+    "input": "",
+    "output": "Eligible employees can request up to 12 weeks of paid leave by submitting request form HR-LEAVE-2026 to HR."
+  }
+]

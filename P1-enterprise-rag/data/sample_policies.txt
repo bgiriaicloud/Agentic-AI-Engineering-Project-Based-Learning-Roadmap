@@ -1,0 +1,34 @@
+========================================================================
+ACME CORP INTERNAL HR AND OPERATIONS POLICIES HANDBOOK
+========================================================================
+
+SECTION 1: REMOTE WORK POLICY (Document Reference: HR-REMOTE-2026)
+------------------------------------------------------------------------
+Acme Corp supports a flexible hybrid working framework. 
+- Core Work Hours: All employees are expected to be online and available between 10:00 AM and 3:00 PM EST.
+- Work Location: Remote workers must maintain a secure, private workspace with high-speed internet (minimum 50 Mbps download speed).
+- Remote Work Stipend: Full-time employees are eligible for a one-time workspace setup allowance of $500 USD. This stipend covers ergonomic chairs, desk lighting, or monitors. Receipts must be submitted to Expensify within 30 days of purchase.
+- Monthly Internet Reimbursement: Up to $50 USD per month can be claimed under internet operations expenses.
+
+SECTION 2: TRAVEL & EXPENSE POLICY (Document Reference: OPS-EXPENSE-2026)
+------------------------------------------------------------------------
+All business travel must be approved by the department supervisor at least 14 days prior to booking.
+- Lodging: Standard hotel room rates must not exceed $200 USD per night in general tier-2 cities, or $350 USD per night in high-cost tier-1 locations (e.g., New York City, San Francisco, Tokyo).
+- Meal Allowances: Daily allowance (per diem) for food and beverages is capped at $75 USD per day. Receipts are required for any single transaction exceeding $25 USD.
+- Client Entertainment: Entertaining clients must be approved in writing by the regional director. The maximum expenditure allowed is $150 USD per client, and a clear business purpose must be documented on the expense report.
+- Air Travel: All domestic flights must be booked in economy class. International flights over 8 hours can be booked in business class, subject to VP approval.
+
+SECTION 3: DATA SECURITY AND PASSWORDS (Document Reference: SEC-CREDENTIALS-2026)
+------------------------------------------------------------------------
+Protecting company and customer data is every employee's responsibility.
+- Password Complexity: Passwords must be at least 12 characters long and contain uppercase letters, lowercase letters, numbers, and at least one special character.
+- Password Rotation: Passwords must be changed every 90 days. Reusing any of the last 5 passwords is prohibited.
+- Multi-Factor Authentication (MFA): MFA must be enabled on all corporate email accounts, cloud endpoints, and developer portals. Under no circumstances should MFA prompts be approved if you did not initiate the login.
+- Device Security: Laptops must not be left unattended in public spaces. Hard drives must be fully encrypted using BitLocker (Windows) or FileVault (macOS).
+
+SECTION 4: LEAVE AND HOLIDAYS (Document Reference: HR-LEAVE-2026)
+------------------------------------------------------------------------
+Acme Corp values healthy work-life integration.
+- Paid Time Off (PTO): Full-time employees accrue 20 days of PTO per calendar year. Up to 5 unused PTO days can be carried over into the next calendar year; additional unused days will expire.
+- Sick Leave: Employees receive 10 paid sick days per year. If sick leave extends beyond 3 consecutive business days, a verified physician's certificate must be submitted to HR.
+- Parental Leave: Eligible parents receive up to 12 weeks of fully paid parental leave following the birth or adoption of a child.

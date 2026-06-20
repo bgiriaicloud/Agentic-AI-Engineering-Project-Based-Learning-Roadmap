@@ -1,0 +1,34 @@
+[
+  {
+    "id": "tc_01",
+    "query": "What is the remote work setup stipend at Acme Corp?",
+    "context": "Remote Work Stipend: Full-time employees are eligible for a one-time workspace setup allowance of $500 USD. This stipend covers ergonomic chairs, desk lighting, or monitors. Receipts must be submitted within 30 days.",
+    "ground_truth": "Full-time employees are eligible for a one-time workspace setup stipend of $500 USD for items like ergonomic chairs, desk lighting, or monitors.",
+    "generated_output_v1": "Employees can get $500 one-time for workspace setup like chairs and monitors, with receipt submissions.",
+    "generated_output_v2_hallucinated": "Employees receive $500 monthly for setting up any workspace items, and they do not need to submit receipts."
+  },
+  {
+    "id": "tc_02",
+    "query": "What is the lodging expense limit for tier-1 cities?",
+    "context": "Lodging: Standard hotel room rates must not exceed $200 USD per night in general tier-2 cities, or $350 USD per night in high-cost tier-1 locations (e.g., New York City, San Francisco, Tokyo).",
+    "ground_truth": "The lodging expense cap for high-cost tier-1 cities is $350 USD per night.",
+    "generated_output_v1": "Standard hotel rates are capped at $350 USD per night for high-cost tier-1 cities like NYC or Tokyo.",
+    "generated_output_v2_hallucinated": "Hotel rates are limited to $200 USD per night in NYC and San Francisco."
+  },
+  {
+    "id": "tc_03",
+    "query": "How long must passwords be and how often must they rotate?",
+    "context": "Password Complexity: Passwords must be at least 12 characters long and contain uppercase, lowercase, numbers, and special characters. Passwords must be changed every 90 days.",
+    "ground_truth": "Passwords must be at least 12 characters long and must be rotated/changed every 90 days.",
+    "generated_output_v1": "Passwords require a minimum length of 12 characters and must be rotated every 90 days.",
+    "generated_output_v2_hallucinated": "Passwords must be 8 characters long and changed every 30 days."
+  },
+  {
+    "id": "tc_04",
+    "query": "How many days of sick leave can you take without a medical note?",
+    "context": "Sick Leave: Employees receive 10 paid sick days per year. If sick leave extends beyond 3 consecutive business days, a verified physician's certificate must be submitted to HR.",
+    "ground_truth": "You can take up to 3 consecutive business days of sick leave without needing to submit a physician's certificate.",
+    "generated_output_v1": "A physician's certificate is required if you take more than 3 consecutive sick days.",
+    "generated_output_v2_hallucinated": "You receive 10 sick days but must always submit a doctor's certificate for any absence."
+  }
+]

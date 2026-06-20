@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s # How frequently to poll targets
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "ai_inference_app"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["localhost:8000"] # Change to K8s service dns/ip in production
